@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Cyberpunk Roombox — AR</title>
+
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #000;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      position: fixed;
+      inset: 0;
+    }
+
+    /* Контейнер AR занимает весь экран. */
+    #ar-container,
+    #ar-container a-scene,
+    #ar-container canvas {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    #ar-container {
+      z-index: 1;
+      overflow: hidden;
+      background: transparent;
+    }
+
+    /* ВАЖНО: видео камеры MindAR должно быть позади прозрачного WebGL canvas. */
+    #ar-container video.mindar-video,
+    #ar-container video[class*="mindar"] {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      max-width: none !important;
+      max-height: none !important;
+      object-fit: cover !important;
+      z-index: 0 !important;
+      display: block !important;
+      opacity: 1 !important;
+      visibility: visible !important;
+      background: transparent !important;
+      pointer-events: none !important;
+    }
+
+    #ar-container canvas {
+      z-index: 1 !important;
+      background: transparent !important;
+      pointer-events: none !important;
+    }
+
+    /* Скрываем стандартный интерфейс MindAR: используем свой. */
+    .mindar-ui-loading,
+    .mindar-ui-scanning,
+    .mindar-ui-error {
+      display: none !important;
+    }
+
+    #startScreen {
+      position: fixed;
+      inset: 0;
+      z-index: 10000000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      padding: 28px;
+      text-align: center;
+      color: #fff;
+      background: #0a0a12;
+    }
+
+    #startScreen .title {
+      font-size: 20px;
+      line-height: 1.4;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    #startScreen .sub {
+      max-width: 330px;
+      font-size: 15px;
+      line-height: 1.45;
+      opacity: .9;
+    }
+
+    #startButton {
+      margin-top: 22px;
+      padding: 14px 28px;
+      font-size: 17px;
+      font-weight: 700;
+      border-radius: 10px;
+      border: 2px solid #00ffff;
+      background: #071216;
+      color: #00ffff;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    #status {
+      position: fixed;
+      left: 14px;
+      right: 14px;
+      bottom: max(18px, env(safe-area-inset-bottom));
+      z-index: 1000000;
+      color: #fff;
+      text-align: center;
+      font-size: 13px;
+      line-height: 1.35;
+      text-shadow: 0 1px 4px #000, 0 0 8px #000;
+      pointer-events: none;
+      padding: 0 8px;
+    }
+
+    /* Свой простой сканер, без закрытия изображения камеры. */
+    #scanner {
+      position: fixed;
+      inset: 0;
+      z-index: 999999;
+      pointer-events: none;
+      display: none;
+    }
+
+    #scannerFrame {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: min(72vw, 360px);
+      height: min(72vw, 360px);
+      transform: translate(-50%, -50%);
+      border: 2px solid rgba(255,255,255,.9);
+      border-radius: 22px;
+      box-shadow: 0 0 0 9999px rgba(0,0,0,.04);
+    }
+
+    #scannerFrame::before,
+    #scannerFrame::after {
+      content: "";
+      position: absolute;
+      width: 42px;
+      height: 42px;
+      border-color: #00ffff;
+      border-style: solid;
+    }
+
+    #scannerFrame::before {
+      left: -2px;
+      top: -2px;
+      border-width: 5px 0 0 5px;
+      border-radius: 18px 0 0 0;
+    }
+
+    #scannerFrame::after {
+      right: -2px;
+      bottom: -2px;
+      border-width: 0 5px 5px 0;
+      border-radius: 0 0 18px 0;
+    }
+
+    #scannerText {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: calc(50% + min(36vw, 180px) + 22px);
+      text-align: center;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      text-shadow: 0 1px 5px #000;
+    }
+
+    #errorBox {
+      position: fixed;
+      inset: 0;
+      z-index: 10000001;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 25px;
+      background: rgba(0,0,0,.88);
+      color: #fff;
+      text-align: center;
+    }
+
+    #errorBox .inner {
+      max-width: 360px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="startScreen">
+    <div class="title">AR-режим готов</div>
+    <div class="sub">Нажми кнопку, разреши доступ к камере и наведи телефон на фасад ромбокса.</div>
+    <button id="startButton" type="button">Запустить камеру</button>
+  </div>
+
+  <div id="errorBox">
+    <div class="inner">
+      <h2>Не удалось запустить AR</h2>
+      <p id="errorText">Проверь разрешение камеры и используй современный браузер.</p>
+    </div>
+  </div>
+
+  <div id="status">Подготовка AR…</div>
+
+  <div id="scanner">
+    <div id="scannerFrame"></div>
+    <div id="scannerText">Наведите камеру на фасад ромбокса</div>
+  </div>
+
+  <div id="ar-container">
+    <a-scene
+      embedded
+      mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiScanning: no; uiLoading: no; uiError: no;"
+      color-space="sRGB"
+      renderer="alpha: true; antialias: true; colorManagement: true; physicallyCorrectLights"
+      vr-mode-ui="enabled: false"
+      device-orientation-permission-ui="enabled: false">
+
+      <a-assets>
+        <img id="car" src="./assets/car.svg" crossorigin="anonymous">
+        <img id="person1" src="./assets/person.svg" crossorigin="anonymous">
+        <img id="person2" src="./assets/person.svg" crossorigin="anonymous">
+      </a-assets>
+
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+      <a-entity id="target" mindar-image-target="targetIndex: 0">
+        <a-image
+          src="#car"
+          position="-0.45 -0.35 0.02"
+          rotation="-90 0 0"
+          width="0.28"
+          height="0.14"
+          animation="property: position; to: 0.45 -0.35 0.02; dur: 3500; easing: easeInOutSine; loop: true; dir: alternate">
+        </a-image>
+
+        <a-image
+          src="#person1"
+          position="-0.25 -0.05 0.02"
+          rotation="-90 0 0"
+          width="0.09"
+          height="0.22"
+          opacity="0"
+          animation__appear="property: opacity; from: 0; to: 1; dur: 600; delay: 500; startEvents: targetFound">
+        </a-image>
+
+        <a-image
+          src="#person2"
+          position="0.3 -0.05 0.02"
+          rotation="-90 0 0"
+          width="0.09"
+          height="0.22"
+          opacity="0"
+          animation__appear="property: opacity; from: 0; to: 1; dur: 600; delay: 2200; startEvents: targetFound">
+        </a-image>
+      </a-entity>
+    </a-scene>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const sceneEl = document.querySelector('a-scene');
+      const startScreen = document.getElementById('startScreen');
+      const startButton = document.getElementById('startButton');
+      const status = document.getElementById('status');
+      const scanner = document.getElementById('scanner');
+      const target = document.getElementById('target');
+      const errorBox = document.getElementById('errorBox');
+      const errorText = document.getElementById('errorText');
+
+      let arSystem = null;
+      let started = false;
+
+      function setStatus(text) {
+        status.textContent = text;
+      }
+
+      function showError(text) {
+        errorText.textContent = text;
+        errorBox.style.display = 'flex';
+      }
+
+      function forceCameraLayer() {
+        // MindAR создаёт <video class="mindar-video"> после старта.
+        // Явно задаём правильный слой, чтобы камера была видна под WebGL.
+        const videos = document.querySelectorAll('#ar-container video');
+        videos.forEach((video) => {
+          const cls = String(video.className || '');
+          if (cls.includes('mindar') || video.autoplay || video.playsInline) {
+            video.style.position = 'fixed';
+            video.style.inset = '0';
+            video.style.width = '100%';
+            video.style.height = '100%';
+            video.style.maxWidth = 'none';
+            video.style.maxHeight = 'none';
+            video.style.objectFit = 'cover';
+            video.style.zIndex = '0';
+            video.style.display = 'block';
+            video.style.visibility = 'visible';
+            video.style.opacity = '1';
+            video.style.background = 'transparent';
+          }
+        });
+
+        if (sceneEl.canvas) {
+          sceneEl.canvas.style.position = 'fixed';
+          sceneEl.canvas.style.inset = '0';
+          sceneEl.canvas.style.width = '100%';
+          sceneEl.canvas.style.height = '100%';
+          sceneEl.canvas.style.zIndex = '1';
+          sceneEl.canvas.style.background = 'transparent';
+        }
+      }
+
+      sceneEl.addEventListener('loaded', () => {
+        arSystem = sceneEl.systems['mindar-image-system'];
+        if (!arSystem) {
+          setStatus('Ошибка: MindAR не загрузился.');
+          startButton.disabled = true;
+          showError('MindAR не загрузился. Проверь интернет-соединение и загрузку страницы.');
+          return;
+        }
+        setStatus('AR готов. Нажмите «Запустить камеру».');
+      });
+
+      sceneEl.addEventListener('arReady', () => {
+        started = true;
+        startScreen.style.display = 'none';
+        scanner.style.display = 'block';
+        setStatus('Камера запущена. Наведите её на фасад ромбокса.');
+        forceCameraLayer();
+        setTimeout(forceCameraLayer, 150);
+        setTimeout(forceCameraLayer, 800);
+      });
+
+      sceneEl.addEventListener('arError', (event) => {
+        console.error('MindAR arError:', event);
+        scanner.style.display = 'none';
+        startScreen.style.display = 'flex';
+        const detail = event && event.detail ? String(event.detail) : '';
+        const message = detail
+          ? 'MindAR вернул ошибку: ' + detail
+          : 'MindAR не смог запустить камеру. Разреши камеру для сайта и попробуй ещё раз.';
+        setStatus(message);
+        showError(message);
+      });
+
+      startButton.addEventListener('click', async () => {
+        errorBox.style.display = 'none';
+
+        try {
+          if (!arSystem) {
+            arSystem = sceneEl.systems['mindar-image-system'];
+          }
+
+          if (!arSystem) {
+            throw new Error('MindAR system not found');
+          }
+
+          setStatus('Запускаю камеру…');
+          scanner.style.display = 'block';
+
+          // ВАЖНО: запускаем именно MindAR, а не только A-Frame scene.play().
+          await arSystem.start();
+        } catch (error) {
+          console.error('MindAR start error:', error);
+          startScreen.style.display = 'flex';
+          scanner.style.display = 'none';
+          const message = 'Не удалось запустить камеру: ' + (error.message || error);
+          setStatus(message);
+          showError(message);
+        }
+      });
+
+      target.addEventListener('targetFound', () => {
+        scanner.style.display = 'none';
+        setStatus('Цель найдена — AR активен.');
+        forceCameraLayer();
+      });
+
+      target.addEventListener('targetLost', () => {
+        if (started) {
+          scanner.style.display = 'block';
+          setStatus('Цель потеряна — снова наведите камеру на фасад.');
+        }
+      });
+
+      // На случай мобильных браузеров, которые меняют размеры viewport после старта камеры.
+      window.addEventListener('resize', forceCameraLayer);
+      window.addEventListener('orientationchange', () => setTimeout(forceCameraLayer, 300));
+
+      // Начальный слой сцены делаем прозрачным ещё до старта MindAR.
+      const observer = new MutationObserver(() => forceCameraLayer());
+      observer.observe(document.getElementById('ar-container'), { childList: true, subtree: true });
+    });
+  </script>
+</body>
+</html>
