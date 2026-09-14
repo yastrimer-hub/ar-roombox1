@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Future World — 3D depth AR</title>
+
+  <!-- Тот же проверенный загрузчик, что в mindar_clean_test.html -->
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
+  <style>
+    body { margin:0; overflow:hidden; background:#000; }
+    #status {
+      position:fixed; z-index:9999; left:50%; bottom:18px;
+      transform:translateX(-50%);
+      padding:10px 14px; border-radius:12px;
+      color:#fff; background:rgba(0,0,0,.62);
+      font:14px Arial,sans-serif; text-align:center;
+      pointer-events:none; max-width:90vw;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="status">Загрузка AR…</div>
+
+  <a-scene
+    mindar-image="imageTargetSrc: ./targets.mind;"
+    color-space="sRGB"
+    renderer="colorManagement: true, physicallyCorrectLights"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false">
+
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+    <a-entity id="world" mindar-image-target="targetIndex: 0">
+
+      <!-- Мягкий общий свет -->
+      <a-light type="ambient" color="#aab7d6" intensity="0.38"></a-light>
+
+      <!-- ==================================================
+           ВИРТУАЛЬНАЯ ДОРОГА
+           X = ширина дороги
+           Z = глубина улицы
+           Y = высота
+           ================================================== -->
+
+      <a-plane
+        position="0 -0.285 0.72"
+        rotation="-90 0 0"
+        width="0.64"
+        height="1.65"
+        material="shader: flat; color: #11151b; transparent: true; opacity: 0.18">
+      </a-plane>
+
+      <!-- две тонкие линии полосы -->
+      <a-box
+        position="-0.08 -0.278 0.72"
+        width="0.012" height="0.008" depth="1.60"
+        color="#d8d8d8"
+        material="shader: flat; transparent:true; opacity:.65">
+      </a-box>
+
+      <a-box
+        position="0.08 -0.278 0.72"
+        width="0.012" height="0.008" depth="1.60"
+        color="#d8d8d8"
+        material="shader: flat; transparent:true; opacity:.65">
+      </a-box>
+
+      <!-- ==================================================
+           МАШИНА 3D
+           Движение только по Z.
+           Стоит на дороге: Y = -0.20.
+           ================================================== -->
+
+      <a-entity
+        id="car"
+        position="0 -0.20 0.10"
+        animation__drive="
+          property: position;
+          from: 0 -0.20 0.10;
+          to: 0 -0.20 1.48;
+          dur: 6500;
+          easing: linear;
+          loop: true">
+
+        <!-- кузов -->
+        <a-box position="0 0.09 0"
+          width="0.25" height="0.13" depth="0.42"
+          color="#d6dbe2"
+          material="shader: standard; metalness:.65; roughness:.26">
+        </a-box>
+
+        <!-- нижняя часть -->
+        <a-box position="0 0.035 0"
+          width="0.28" height="0.055" depth="0.39"
+          color="#24282f"
+          material="shader: standard; metalness:.45; roughness:.38">
+        </a-box>
+
+        <!-- салон -->
+        <a-box position="0 0.20 -0.025"
+          width="0.19" height="0.13" depth="0.21"
+          color="#26303a"
+          material="shader: standard; metalness:.15; roughness:.25">
+        </a-box>
+
+        <!-- переднее стекло -->
+        <a-box position="0 0.205 0.085"
+          width="0.15" height="0.055" depth="0.012"
+          color="#70c5e5"
+          material="shader: standard; transparent:true; opacity:.75; roughness:.1">
+        </a-box>
+
+        <!-- колёса -->
+        <a-cylinder position="-0.15 0.025 0.14"
+          radius="0.055" height="0.032" rotation="90 0 0"
+          color="#121417"
+          animation="property: rotation; from:90 0 0; to:90 0 360; dur:420; easing:linear; loop:true">
+        </a-cylinder>
+        <a-cylinder position="0.15 0.025 0.14"
+          radius="0.055" height="0.032" rotation="90 0 0"
+          color="#121417"
+          animation="property: rotation; from:90 0 0; to:90 0 360; dur:420; easing:linear; loop:true">
+        </a-cylinder>
+        <a-cylinder position="-0.15 0.025 -0.14"
+          radius="0.055" height="0.032" rotation="90 0 0"
+          color="#121417"
+          animation="property: rotation; from:90 0 0; to:90 0 360; dur:420; easing:linear; loop:true">
+        </a-cylinder>
+        <a-cylinder position="0.15 0.025 -0.14"
+          radius="0.055" height="0.032" rotation="90 0 0"
+          color="#121417"
+          animation="property: rotation; from:90 0 0; to:90 0 360; dur:420; easing:linear; loop:true">
+        </a-cylinder>
+
+        <!-- фары -->
+        <a-sphere position="-0.075 0.12 0.215" radius="0.020"
+          color="#fff1a6"
+          material="shader:standard; emissive:#ffe27b; emissiveIntensity:2.4">
+        </a-sphere>
+        <a-sphere position="0.075 0.12 0.215" radius="0.020"
+          color="#fff1a6"
+          material="shader:standard; emissive:#ffe27b; emissiveIntensity:2.4">
+        </a-sphere>
+      </a-entity>
+
+      <!-- ==================================================
+           ЧЕЛОВЕК 1 — правая сторона дороги.
+           Положение ног = Y -0.20.
+           Идёт в глубину по Z.
+           ================================================== -->
+
+      <a-entity
+        id="person1"
+        position="0.21 -0.20 0.28"
+        scale="0.65 0.65 0.65"
+        animation__walkpath="
+          property: position;
+          from: 0.21 -0.20 0.28;
+          to: 0.21 -0.20 1.35;
+          dur: 7600;
+          easing: linear;
+          loop: true">
+
+        <!-- ноги идут от пола вверх -->
+        <a-cylinder
+          position="-0.035 0.12 0"
+          radius="0.024" height="0.24"
+          color="#292d34"
+          animation="property: rotation; from:-12 0 0; to:12 0 0; dur:420; direction:alternate; loop:true">
+        </a-cylinder>
+
+        <a-cylinder
+          position="0.035 0.12 0"
+          radius="0.024" height="0.24"
+          color="#292d34"
+          animation="property: rotation; from:12 0 0; to:-12 0 0; dur:420; direction:alternate; loop:true">
+        </a-cylinder>
+
+        <!-- тело -->
+        <a-cylinder
+          position="0 0.31 0"
+          radius="0.072" height="0.22"
+          color="#357bb6"
+          material="shader:standard; roughness:.6">
+        </a-cylinder>
+
+        <!-- руки -->
+        <a-cylinder
+          position="-0.09 0.30 0"
+          radius="0.020" height="0.17"
+          rotation="0 0 24"
+          color="#c99170"
+          animation="property: rotation; from:0 0 -24; to:0 0 28; dur:420; direction:alternate; loop:true">
+        </a-cylinder>
+
+        <a-cylinder
+          position="0.09 0.30 0"
+          radius="0.020" height="0.17"
+          rotation="0 0 -24"
+          color="#c99170"
+          animation="property: rotation; from:0 0 28; to:0 0 -24; dur:420; direction:alternate; loop:true">
+        </a-cylinder>
+
+        <!-- голова -->
+        <a-sphere position="0 0.48 0"
+          radius="0.064" color="#c99170"></a-sphere>
+
+        <!-- волосы -->
+        <a-sphere position="0 0.51 -0.012"
+          radius="0.064" color="#25252b"></a-sphere>
+      </a-entity>
+
+      <!-- ==================================================
+           ЧЕЛОВЕК 2 — левая сторона, идёт навстречу.
+           ================================================== -->
+
+      <a-entity
+        id="person2"
+        position="-0.20 -0.20 1.28"
+        scale="0.58 0.58 0.58"
+        animation__walkpath="
+          property: position;
+          from: -0.20 -0.20 1.28;
+          to: -0.20 -0.20 0.20;
+          dur: 8200;
+          easing: linear;
+          loop: true">
+
+        <a-cylinder
+          position="-0.035 0.12 0"
+          radius="0.024" height="0.24"
+          color="#33343b"
+          animation="property: rotation; from:12 0 0; to:-12 0 0; dur:460; direction:alternate; loop:true">
+        </a-cylinder>
+
+        <a-cylinder
+          position="0.035 0.12 0"
+          radius="0.024" height="0.24"
+          color="#33343b"
+          animation="property: rotation; from:-12 0 0; to:12 0 0; dur:460; direction:alternate; loop:true">
+        </a-cylinder>
+
+        <a-cylinder
+          position="0 0.31 0"
+          radius="0.072" height="0.22"
+          color="#9f4263"
+          material="shader:standard; roughness:.6">
+        </a-cylinder>
+
+        <a-cylinder
+          position="-0.09 0.30 0"
+          radius="0.020" height="0.17"
+          rotation="0 0 -22"
+          color="#b47c5d"
+          animation="property: rotation; from:0 0 24; to:0 0 -28; dur:460; direction:alternate; loop:true">
+        </a-cylinder>
+
+        <a-cylinder
+          position="0.09 0.30 0"
+          radius="0.020" height="0.17"
+          rotation="0 0 22"
+          color="#b47c5d"
+          animation="property: rotation; from:0 0 -28; to:0 0 24; dur:460; direction:alternate; loop:true">
+        </a-cylinder>
+
+        <a-sphere position="0 0.48 0"
+          radius="0.064" color="#b47c5d"></a-sphere>
+
+        <a-sphere position="0 0.51 -0.012"
+          radius="0.064" color="#4b2e2a"></a-sphere>
+      </a-entity>
+
+      <!-- ==================================================
+           ФОНАРИ — вертикальные 3D-объекты.
+           ================================================== -->
+
+      <a-entity position="-0.38 -0.20 0.45">
+        <a-cylinder position="0 0.25 0"
+          radius="0.014" height="0.50"
+          color="#30343b"></a-cylinder>
+        <a-sphere id="lampL" position="0 0.54 0"
+          radius="0.040"
+          color="#62e7ff"
+          material="shader:standard; emissive:#38dfff; emissiveIntensity:2.8">
+        </a-sphere>
+        <a-light id="lightL" type="point" position="0 0.54 0"
+          color="#35dcff" intensity="1.1" distance="1.0"></a-light>
+      </a-entity>
+
+      <a-entity position="0.38 -0.20 1.05">
+        <a-cylinder position="0 0.25 0"
+          radius="0.014" height="0.50"
+          color="#30343b"></a-cylinder>
+        <a-sphere id="lampR" position="0 0.54 0"
+          radius="0.040"
+          color="#ff70d5"
+          material="shader:standard; emissive:#ff40c7; emissiveIntensity:2.8">
+        </a-sphere>
+        <a-light id="lightR" type="point" position="0 0.54 0"
+          color="#ff40c8" intensity="1.05" distance="1.0"></a-light>
+      </a-entity>
+
+    </a-entity>
+  </a-scene>
+
+  <script>
+    const scene = document.querySelector('a-scene');
+    const target = document.querySelector('[mindar-image-target]');
+    const status = document.getElementById('status');
+
+    scene.addEventListener('loaded', () => {
+      status.textContent = 'Камера запущена. Наведи на румбокс.';
+    });
+
+    scene.addEventListener('arReady', () => {
+      status.textContent = 'Камера запущена. Наведи на румбокс.';
+    });
+
+    target.addEventListener('targetFound', () => {
+      status.textContent = 'Румбокс найден — настоящая 3D-глубина включена!';
+    });
+
+    target.addEventListener('targetLost', () => {
+      status.textContent = 'Ищу румбокс…';
+    });
+
+    // Живое, но не слишком резкое мерцание.
+    setInterval(() => {
+      const a = 0.75 + Math.random() * 0.75;
+      const b = 0.65 + Math.random() * 0.85;
+
+      document.getElementById('lightL').setAttribute('intensity', a);
+      document.getElementById('lightR').setAttribute('intensity', b);
+
+      document.getElementById('lampL').setAttribute('material',
+        `shader:standard; emissive:#38dfff; emissiveIntensity:${1.7 + Math.random()*2.0}`);
+
+      document.getElementById('lampR').setAttribute('material',
+        `shader:standard; emissive:#ff40c7; emissiveIntensity:${1.7 + Math.random()*2.0}`);
+    }, 300);
+  </script>
+</body>
+</html>
