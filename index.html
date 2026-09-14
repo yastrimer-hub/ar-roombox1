@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>AR Roombox — рабочая версия</title>
+
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
+  <style>
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: Arial, sans-serif;
+    }
+
+    #ui {
+      position: fixed;
+      z-index: 9999;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%);
+      width: min(92vw, 500px);
+      box-sizing: border-box;
+      text-align: center;
+      color: white;
+    }
+
+    #status {
+      display: inline-block;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: rgba(0,0,0,.68);
+      backdrop-filter: blur(8px);
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    #start {
+      display: block;
+      margin: auto;
+      border: 0;
+      border-radius: 12px;
+      padding: 13px 22px;
+      font-size: 16px;
+      font-weight: 700;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="ui">
+    <div id="status">Загрузка AR…</div>
+    <button id="start" hidden>Запустить AR</button>
+  </div>
+
+  <a-scene
+    mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiLoading: no; uiError: no; uiScanning: no"
+    color-space="sRGB"
+    renderer="colorManagement: true; physicallyCorrectLights: true"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false">
+
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+    <a-entity mindar-image-target="targetIndex: 0">
+
+      <!-- Тестовая машина: обычная 3D-блочная модель -->
+      <a-box
+        position="0 0.12 0"
+        width="0.42"
+        height="0.16"
+        depth="0.22"
+        color="#d6d6d6"
+        material="shader: flat">
+      </a-box>
+
+      <a-box
+        position="0 0.24 0"
+        width="0.23"
+        height="0.10"
+        depth="0.18"
+        color="#a8a8a8"
+        material="shader: flat">
+      </a-box>
+
+      <a-cylinder
+        position="-0.15 0.03 0.12"
+        radius="0.055"
+        height="0.025"
+        rotation="90 0 0"
+        color="#202020"
+        material="shader: flat">
+      </a-cylinder>
+
+      <a-cylinder
+        position="0.15 0.03 0.12"
+        radius="0.055"
+        height="0.025"
+        rotation="90 0 0"
+        color="#202020"
+        material="shader: flat">
+      </a-cylinder>
+
+      <a-cylinder
+        position="-0.15 0.03 -0.12"
+        radius="0.055"
+        height="0.025"
+        rotation="90 0 0"
+        color="#202020"
+        material="shader: flat">
+      </a-cylinder>
+
+      <a-cylinder
+        position="0.15 0.03 -0.12"
+        radius="0.055"
+        height="0.025"
+        rotation="90 0 0"
+        color="#202020"
+        material="shader: flat">
+      </a-cylinder>
+
+    </a-entity>
+  </a-scene>
+
+  <script>
+    const scene = document.querySelector('a-scene');
+    const start = document.getElementById('start');
+    const status = document.getElementById('status');
+    const target = document.querySelector('[mindar-image-target]');
+
+    scene.addEventListener('loaded', () => {
+      status.textContent = 'MindAR загружен ✅';
+      start.hidden = false;
+    });
+
+    scene.addEventListener('arReady', () => {
+      status.textContent = 'Камера запущена. Наведи на румбокс.';
+    });
+
+    scene.addEventListener('arError', () => {
+      status.textContent = 'Ошибка запуска AR';
+      start.hidden = false;
+    });
+
+    target.addEventListener('targetFound', () => {
+      status.textContent = 'Румбокс найден ✅';
+    });
+
+    target.addEventListener('targetLost', () => {
+      status.textContent = 'Наведи камеру на румбокс';
+    });
+
+    start.addEventListener('click', async () => {
+      start.hidden = true;
+      status.textContent = 'Запускаю камеру…';
+
+      try {
+        const arSystem = scene.systems['mindar-image-system'];
+
+        if (!arSystem) {
+          throw new Error('MindAR image system не найден');
+        }
+
+        await arSystem.start();
+      } catch (error) {
+        console.error(error);
+        status.textContent = 'Не удалось запустить AR';
+        start.hidden = false;
+      }
+    });
+  </script>
+</body>
+</html>
