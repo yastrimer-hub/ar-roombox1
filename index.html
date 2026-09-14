@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Cyberpunk Roombox — AR</title>
+
+  <!-- ТА ЖЕ СХЕМА, КОТОРАЯ УЖЕ РАБОТАЕТ В mindar_clean_test.html -->
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
+  <style>
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: transparent;
+      font-family: Arial, sans-serif;
+    }
+
+    #status {
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      z-index: 1000;
+      width: min(92vw, 520px);
+      box-sizing: border-box;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: rgba(0,0,0,.62);
+      color: #fff;
+      text-align: center;
+      font-size: 14px;
+      pointer-events: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="status">Запускаю камеру…</div>
+
+  <!--
+    ВАЖНО:
+    Здесь специально сохранена структура clean_test:
+    - НЕ embedded
+    - НЕ alpha:true
+    - НЕ ручное позиционирование video
+    - НЕ autoStart:false
+    - НЕ ручной arSystem.start()
+  -->
+  <a-scene
+    mindar-image="imageTargetSrc: ./targets.mind; uiLoading: no; uiError: no; uiScanning: no"
+    color-space="sRGB"
+    renderer="colorManagement: true, physicallyCorrectLights"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false">
+
+    <a-assets>
+      <img id="car" src="./assets/car.svg">
+      <img id="person1" src="./assets/person.svg">
+      <img id="person2" src="./assets/person.svg">
+    </a-assets>
+
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+    <a-entity id="target" mindar-image-target="targetIndex: 0">
+
+      <!-- Машина -->
+      <a-image
+        id="carObject"
+        src="#car"
+        position="-0.45 -0.35 0.02"
+        rotation="-90 0 0"
+        width="0.28"
+        height="0.14"
+        animation="property: position; to: 0.45 -0.35 0.02; dur: 3500; easing: easeInOutSine; loop: true; dir: alternate">
+      </a-image>
+
+      <!-- Первый человек -->
+      <a-image
+        src="#person1"
+        position="-0.25 -0.05 0.02"
+        rotation="-90 0 0"
+        width="0.09"
+        height="0.22"
+        opacity="0"
+        animation="property: opacity; from: 0; to: 1; dur: 600; delay: 500; startEvents: targetFound">
+      </a-image>
+
+      <!-- Второй человек -->
+      <a-image
+        src="#person2"
+        position="0.30 -0.05 0.02"
+        rotation="-90 0 0"
+        width="0.09"
+        height="0.22"
+        opacity="0"
+        animation="property: opacity; from: 0; to: 1; dur: 600; delay: 2200; startEvents: targetFound">
+      </a-image>
+
+    </a-entity>
+  </a-scene>
+
+  <script>
+    const status = document.getElementById('status');
+    const target = document.getElementById('target');
+
+    const scene = document.querySelector('a-scene');
+
+    scene.addEventListener('loaded', () => {
+      status.textContent = 'Камера запущена. Наведите на румбокс.';
+    });
+
+    scene.addEventListener('arReady', () => {
+      status.textContent = 'Камера запущена. Наведите на румбокс.';
+    });
+
+    target.addEventListener('targetFound', () => {
+      status.textContent = 'Румбокс найден — AR работает!';
+    });
+
+    target.addEventListener('targetLost', () => {
+      status.textContent = 'Ищу румбокс…';
+    });
+
+    scene.addEventListener('arError', (event) => {
+      console.error('MindAR:', event);
+      status.textContent = 'Ошибка MindAR';
+    });
+  </script>
+
+</body>
+</html>
