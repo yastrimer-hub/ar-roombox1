@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Cyberpunk Roombox — AR</title>
+
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
+  <style>
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: sans-serif;
+    }
+
+    /* MindAR camera video must be visible behind the transparent A-Frame canvas. */
+    video.mindar-video,
+    body > video,
+    video[autoplay][playsinline] {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      object-fit: cover !important;
+      z-index: 0 !important;
+      display: block !important;
+      opacity: 1 !important;
+      visibility: visible !important;
+      background: transparent !important;
+      pointer-events: none !important;
+    }
+
+    a-scene {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 1 !important;
+      background: transparent !important;
+    }
+
+    a-scene canvas {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 1 !important;
+      background: transparent !important;
+    }
+
+    #startScreen {
+      position: fixed;
+      inset: 0;
+      z-index: 1000000;
+      background: rgba(8, 8, 14, 0.96);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      padding: 24px;
+      box-sizing: border-box;
+      text-align: center;
+    }
+
+    #startScreen button {
+      margin-top: 20px;
+      padding: 14px 28px;
+      font-size: 17px;
+      border-radius: 9px;
+      border: 2px solid #00ffff;
+      background: #071116;
+      color: #00ffff;
+    }
+
+    #status {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 18px;
+      z-index: 1000001;
+      color: #fff;
+      text-align: center;
+      font-size: 14px;
+      text-shadow: 0 1px 4px #000, 0 0 8px #000;
+      pointer-events: none;
+      padding: 0 14px;
+    }
+
+    #scannerOff {
+      position: fixed;
+      inset: 0;
+      z-index: 999998;
+      pointer-events: none;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="startScreen">
+    <div style="font-size:20px;font-weight:700">AR-режим готов</div>
+    <div style="margin-top:10px;opacity:.85">Наведите камеру на фасад ромбокса.</div>
+    <button id="startButton">Запустить камеру</button>
+  </div>
+
+  <div id="status">Нажмите «Запустить камеру»</div>
+
+  <a-scene
+    id="arScene"
+    embedded
+    mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiScanning: no; uiLoading: no; uiError: no;"
+    color-space="sRGB"
+    renderer="alpha: true; colorManagement: true; physicallyCorrectLights"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false">
+
+    <a-assets>
+      <img id="car" src="./assets/car.svg">
+      <img id="person1" src="./assets/person.svg">
+      <img id="person2" src="./assets/person.svg">
+    </a-assets>
+
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+    <a-entity id="target" mindar-image-target="targetIndex: 0">
+      <a-image
+        src="#car"
+        position="-0.45 -0.35 0.02"
+        rotation="-90 0 0"
+        width="0.28"
+        height="0.14"
+        animation="property: position; to: 0.45 -0.35 0.02; dur: 3500; easing: easeInOutSine; loop: true; dir: alternate">
+      </a-image>
+
+      <a-image
+        src="#person1"
+        position="-0.25 -0.05 0.02"
+        rotation="-90 0 0"
+        width="0.09"
+        height="0.22"
+        opacity="0"
+        animation="property: opacity; from: 0; to: 1; dur: 600; delay: 500; startEvents: targetFound">
+      </a-image>
+
+      <a-image
+        src="#person2"
+        position="0.3 -0.05 0.02"
+        rotation="-90 0 0"
+        width="0.09"
+        height="0.22"
+        opacity="0"
+        animation="property: opacity; from: 0; to: 1; dur: 600; delay: 2200; startEvents: targetFound">
+      </a-image>
+    </a-entity>
+  </a-scene>
+
+  <script>
+    (function () {
+      const sceneEl = document.getElementById('arScene');
+      const startButton = document.getElementById('startButton');
+      const startScreen = document.getElementById('startScreen');
+      const status = document.getElementById('status');
+
+      function setStatus(text) {
+        status.textContent = text;
+      }
+
+      function styleCameraVideo() {
+        const videos = document.querySelectorAll('video');
+        videos.forEach((video) => {
+          video.classList.add('mindar-video');
+          video.setAttribute('playsinline', '');
+          video.setAttribute('autoplay', '');
+          video.muted = true;
+          video.style.position = 'fixed';
+          video.style.inset = '0';
+          video.style.width = '100vw';
+          video.style.height = '100vh';
+          video.style.objectFit = 'cover';
+          video.style.zIndex = '0';
+          video.style.opacity = '1';
+          video.style.visibility = 'visible';
+        });
+      }
+
+      sceneEl.addEventListener('renderstart', styleCameraVideo);
+      sceneEl.addEventListener('arReady', function () {
+        styleCameraVideo();
+        setStatus('Камера включена. Наведите на румбокс.');
+      });
+      sceneEl.addEventListener('targetFound', function () {
+        styleCameraVideo();
+        setStatus('Румбокс найден — AR работает!');
+      });
+      sceneEl.addEventListener('targetLost', function () {
+        setStatus('Ищу румбокс…');
+      });
+      sceneEl.addEventListener('arError', function (event) {
+        console.error('MindAR arError:', event);
+        setStatus('Ошибка AR. Разрешение камеры получено, но MindAR вернул ошибку.');
+      });
+
+      startButton.addEventListener('click', async function () {
+        startButton.disabled = true;
+        startButton.textContent = 'Запуск…';
+        setStatus('Запускаю камеру…');
+
+        try {
+          const arSystem = sceneEl.systems['mindar-image-system'];
+          if (!arSystem) {
+            throw new Error('mindar-image-system не найден');
+          }
+
+          startScreen.style.display = 'none';
+          await arSystem.start();
+          styleCameraVideo();
+          setStatus('Камера включена. Наведите на румбокс.');
+        } catch (error) {
+          console.error(error);
+          startScreen.style.display = 'flex';
+          startButton.disabled = false;
+          startButton.textContent = 'Попробовать снова';
+          setStatus('Ошибка запуска AR: ' + error.message);
+          alert('Не удалось запустить AR: ' + error.message);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
