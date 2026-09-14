@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Cyberpunk Roombox — AR</title>
+
+  <!-- Библиотеки лежат локально в репозитории (папка libs/), чтобы страница не зависела от CDN -->
+  <script src="./libs/aframe.min.js"></script>
+  <script src="./libs/mindar-image-aframe.prod.js"></script>
+
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; background:#000; font-family: sans-serif; }
+
+    #hint {
+      position: fixed;
+      bottom: 24px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      color: #fff;
+      font-size: 14px;
+      z-index: 999999;
+      text-shadow: 0 0 6px #000;
+      pointer-events: none;
+    }
+
+    #startBtn {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 9999999;
+      background: #0a0a12;
+      color: #0ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      font-size: 18px;
+      text-align: center;
+      padding: 24px;
+      box-sizing: border-box;
+    }
+    #startBtn button {
+      margin-top: 20px;
+      padding: 14px 28px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 2px solid #0ff;
+      background: transparent;
+      color: #0ff;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Стартовый экран: камера в браузере запускается только после явного тапа пользователя -->
+  <div id="startBtn">
+    <div>Наведите камеру на фасад ромбокса,<br>чтобы он "оживил" улицу.</div>
+    <button onclick="document.getElementById('startBtn').style.display='none'; document.querySelector('a-scene').play();">
+      Запустить камеру
+    </button>
+  </div>
+
+  <div id="hint">Держите фасад в кадре несколько секунд</div>
+
+  <a-scene
+    mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiScanning: yes; uiLoading: yes;"
+    color-space="sRGB"
+    renderer="colorManagement: true, physicallyCorrectLights"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: true">
+
+    <a-assets>
+      <img id="car" src="./assets/car.svg" />
+      <img id="person1" src="./assets/person.svg" />
+      <img id="person2" src="./assets/person.svg" />
+    </a-assets>
+
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+    <!-- targetIndex 0 = первое изображение в вашем targets.mind (фасад ромбокса) -->
+    <a-entity mindar-image-target="targetIndex: 0">
+
+      <!-- Машина, едущая по улице слева направо и обратно -->
+      <a-image
+        src="#car"
+        position="-0.45 -0.35 0.02"
+        rotation="-90 0 0"
+        width="0.28"
+        height="0.14"
+        animation="property: position; to: 0.45 -0.35 0.02; dur: 3500; easing: easeInOutSine; loop: true; dir: alternate">
+      </a-image>
+
+      <!-- Человек №1: появляется у одной из дверей -->
+      <a-image
+        src="#person1"
+        position="-0.25 -0.05 0.02"
+        rotation="-90 0 0"
+        width="0.09"
+        height="0.22"
+        opacity="0"
+        animation__fade="property: opacity; to: 1; dur: 800; delay: 1500; loop: true; dir: alternate; startEvents: tick"
+        animation__appear="property: opacity; from: 0; to: 1; dur: 600; delay: 500; startEvents: targetFound">
+      </a-image>
+
+      <!-- Человек №2: появляется у другой двери с задержкой -->
+      <a-image
+        src="#person2"
+        position="0.3 -0.05 0.02"
+        rotation="-90 0 0"
+        width="0.09"
+        height="0.22"
+        opacity="0"
+        animation__appear="property: opacity; from: 0; to: 1; dur: 600; delay: 2200; startEvents: targetFound">
+      </a-image>
+
+    </a-entity>
+  </a-scene>
+
+  <script>
+    // Прячем подсказку через 8 секунд, чтобы не мешала
+    setTimeout(() => {
+      const h = document.getElementById('hint');
+      if (h) h.style.display = 'none';
+    }, 8000);
+  </script>
+</body>
+</html>
