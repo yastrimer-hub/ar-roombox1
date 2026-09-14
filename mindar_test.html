@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>MindAR — тест target</title>
+
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
+  <style>
+    html, body { margin:0; width:100%; height:100%; overflow:hidden; background:#000; }
+    #info {
+      position:fixed; left:50%; bottom:18px; transform:translateX(-50%);
+      z-index:9999; width:min(92vw,520px); box-sizing:border-box;
+      padding:14px 16px; border-radius:14px;
+      background:rgba(0,0,0,.72); color:#fff;
+      font:15px/1.4 Arial,sans-serif; text-align:center;
+      backdrop-filter:blur(8px);
+    }
+    #start {
+      margin-top:10px; padding:11px 18px; border:0; border-radius:10px;
+      font-size:16px; font-weight:700;
+    }
+    #targetStatus { margin-top:6px; opacity:.9; }
+  </style>
+</head>
+
+<body>
+  <div id="info">
+    <div id="status">Подготавливаю MindAR…</div>
+    <button id="start" hidden>Запустить AR</button>
+    <div id="targetStatus"></div>
+  </div>
+
+  <a-scene
+    mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiLoading: no; uiError: no; uiScanning: no;"
+    color-space="sRGB"
+    renderer="colorManagement: true; physicallyCorrectLights: true; alpha: true"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false"
+    embedded
+  >
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+    <a-entity mindar-image-target="targetIndex: 0">
+      <a-box
+        position="0 0 0"
+        width="0.45"
+        height="0.45"
+        depth="0.45"
+        color="#00ff88"
+        animation="property: rotation; to: 0 360 360; loop: true; dur: 2200; easing: linear">
+      </a-box>
+
+      <a-ring
+        position="0 0 0"
+        rotation="0 0 0"
+        radius-inner="0.6"
+        radius-outer="0.66"
+        color="#00ff88"
+        material="shader: flat; transparent: true; opacity: 0.85"
+        animation="property: rotation; to: 0 0 -360; loop: true; dur: 1800; easing: linear">
+      </a-ring>
+    </a-entity>
+  </a-scene>
+
+  <script>
+    const scene = document.querySelector('a-scene');
+    const status = document.getElementById('status');
+    const targetStatus = document.getElementById('targetStatus');
+    const startBtn = document.getElementById('start');
+
+    function setStatus(text) { status.textContent = text; }
+
+    scene.addEventListener('loaded', () => {
+      setStatus('MindAR загружен ✅');
+      startBtn.hidden = false;
+      startBtn.textContent = 'Запустить AR';
+    });
+
+    scene.addEventListener('arReady', () => {
+      setStatus('Камера и MindAR запущены ✅');
+    });
+
+    scene.addEventListener('arError', (e) => {
+      setStatus('Ошибка запуска AR');
+      targetStatus.textContent = String(e.detail || 'Неизвестная ошибка');
+    });
+
+    const target = document.querySelector('[mindar-image-target]');
+
+    target.addEventListener('targetFound', () => {
+      targetStatus.textContent = '🎯 Румбокс найден! Если видишь зелёный куб — target.mind работает.';
+    });
+
+    target.addEventListener('targetLost', () => {
+      targetStatus.textContent = 'Цель потеряна — наведи камеру на изображение румбокса.';
+    });
+
+    startBtn.addEventListener('click', async () => {
+      startBtn.hidden = true;
+      setStatus('Запускаю камеру…');
+
+      try {
+        const system = scene.systems['mindar-image-system'];
+
+        if (!system) {
+          throw new Error('MindAR image system не найден. Проверь загрузку mindar-image-aframe.prod.js');
+        }
+
+        await system.start();
+      } catch (err) {
+        console.error(err);
+        setStatus('Не удалось запустить AR');
+        targetStatus.textContent = (err && err.message) ? err.message : String(err);
+        startBtn.hidden = false;
+      }
+    });
+  </script>
+</body>
+</html>
