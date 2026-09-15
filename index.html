@@ -48,9 +48,9 @@
            ========================================================= -->
 
       <a-entity id="leaningGuy"
-        position="-0.31 -0.53 0.055"
+        position="-0.23 -0.44 0.055"
         rotation="0 0 0"
-        scale="0.58 0.58 0.58">
+        scale="0.46 0.46 0.46">
 
         <!-- торс = толстовка, зелёный -->
         <a-cylinder
@@ -143,6 +143,57 @@
 
 
       <!-- =========================================================
+           ПАРА В ОБНИМКУ НА МОСТИКЕ (верхняя перекладина/балкон).
+           Мужчина и женщина стоят рядом, руки друг у друга на плечах.
+           Подстрой position, если мостик на твоём фото в другом месте:
+           X — левее/правее, Y — выше/ниже, Z — ближе/дальше от камеры.
+           ========================================================= -->
+
+      <a-entity id="couple"
+        position="0.0 0.04 0.05"
+        rotation="0 0 0"
+        scale="0.40 0.40 0.40">
+
+        <!-- МУЖЧИНА (слева) -->
+        <a-cylinder position="-0.06 0.11 0" radius="0.03" height="0.26"
+          color="#22262e" material="shader: standard; roughness:.7"></a-cylinder>
+        <a-cylinder position="-0.045 0.30 0" radius="0.075" height="0.23" rotation="0 0 4"
+          color="#2c3444" material="shader: standard; roughness:.65"></a-cylinder>
+        <a-sphere position="-0.045 0.475 0" radius="0.065"
+          color="#c88e6d" material="shader: standard; roughness:.68"></a-sphere>
+        <a-sphere position="-0.045 0.505 -0.015" radius="0.062"
+          color="#20242c" material="shader: standard; roughness:.85"></a-sphere>
+
+        <!-- ЖЕНЩИНА (справа), чуть ниже ростом -->
+        <a-cylinder position="0.065 0.095 0" radius="0.028" height="0.22"
+          color="#1a1c22" material="shader: standard; roughness:.7"></a-cylinder>
+        <a-cylinder position="0.05 0.275 0" radius="0.068" height="0.20" rotation="0 0 -4"
+          color="#a13d5e" material="shader: standard; roughness:.62"></a-cylinder>
+        <a-sphere position="0.05 0.43 0" radius="0.06"
+          color="#d1a17e" material="shader: standard; roughness:.68"></a-sphere>
+        <!-- длинные волосы -->
+        <a-sphere position="0.05 0.455 -0.02" radius="0.072"
+          color="#3a2318" material="shader: standard; roughness:.85"></a-sphere>
+        <a-cylinder position="0.05 0.36 -0.045" radius="0.045" height="0.16" rotation="12 0 0"
+          color="#3a2318" material="shader: standard; roughness:.85"></a-cylinder>
+
+        <!-- РУКИ В ОБНИМКУ: мужская рука через плечи женщины -->
+        <a-cylinder position="0.01 0.34 0.02" radius="0.02" height="0.16" rotation="0 0 -70"
+          color="#2c3444" material="shader: standard; roughness:.65"></a-cylinder>
+        <!-- женская рука через спину мужчины -->
+        <a-cylinder position="-0.01 0.32 -0.015" radius="0.019" height="0.15" rotation="0 0 68"
+          color="#a13d5e" material="shader: standard; roughness:.62"></a-cylinder>
+
+        <!-- свободные руки, опущены -->
+        <a-cylinder position="-0.115 0.27 0" radius="0.019" height="0.16" rotation="0 0 -10"
+          color="#c88e6d"></a-cylinder>
+        <a-cylinder position="0.125 0.25 0" radius="0.018" height="0.15" rotation="0 0 8"
+          color="#d1a17e"></a-cylinder>
+
+      </a-entity>
+
+
+      <!-- =========================================================
            МАШИНА — ПРОСТО ВИСИТ НАД ДОРОГОЙ, БЕЗ КОЛЁС.
            Неоновая подсветка снизу (циан + розовый).
            Лёгкое покачивание вверх-вниз.
@@ -151,7 +202,7 @@
       <a-entity id="hoverCar"
         position="0.13 0.10 0.18"
         rotation="0 0 0"
-        scale="0.52 0.52 0.52"
+        scale="0.40 0.40 0.40"
         animation="
           property: position;
           from: 0.13 0.10 0.18;
