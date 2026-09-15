@@ -48,7 +48,7 @@
            ========================================================= -->
 
       <a-entity id="leaningGuy"
-        position="-0.23 -0.44 0.055"
+        position="-0.15 -0.44 0.055"
         rotation="0 0 0"
         scale="0.46 0.46 0.46">
 
@@ -152,7 +152,7 @@
       <a-entity id="couple"
         position="0.0 0.04 0.05"
         rotation="0 0 0"
-        scale="0.40 0.40 0.40">
+        scale="0.30 0.30 0.30">
 
         <!-- МУЖЧИНА (слева) -->
         <a-cylinder position="-0.06 0.11 0" radius="0.03" height="0.26"
@@ -165,8 +165,10 @@
           color="#20242c" material="shader: standard; roughness:.85"></a-sphere>
 
         <!-- ЖЕНЩИНА (справа), чуть ниже ростом -->
-        <a-cylinder position="0.065 0.095 0" radius="0.028" height="0.22"
-          color="#1a1c22" material="shader: standard; roughness:.7"></a-cylinder>
+        <a-cone position="0.055 0.14 0" radius-bottom="0.075" radius-top="0.045" height="0.24"
+  color="#a13d5e" material="shader: standard; roughness:.6"></a-cone>
+<a-box position="-0.01 0.028 0.02" width="0.03" height="0.02" depth="0.05" color="#1a1c22"></a-box>
+<a-box position="0.10 0.028 0.02" width="0.03" height="0.02" depth="0.05" color="#1a1c22"></a-box>
         <a-cylinder position="0.05 0.275 0" radius="0.068" height="0.20" rotation="0 0 -4"
           color="#a13d5e" material="shader: standard; roughness:.62"></a-cylinder>
         <a-sphere position="0.05 0.43 0" radius="0.06"
